@@ -1,0 +1,632 @@
+
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>مطعم كبسة بر</title>
+
+<style>
+:root {
+  --red: #742b24;
+  --dark: #291d18;
+  --gold: #c8a15e;
+  --bg: #f7f1e7;
+  --white: #fffdf9;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Tahoma, Arial, sans-serif;
+  background: var(--bg);
+  color: #29241f;
+}
+
+header {
+  background: linear-gradient(135deg, #211915, #63251f);
+  color: white;
+  text-align: center;
+  padding: 45px 15px;
+  border-bottom: 4px solid var(--gold);
+}
+
+header h1 {
+  font-size: 45px;
+  margin: 0 0 10px;
+}
+
+header p {
+  color: #f1dfbd;
+  margin: 0;
+}
+
+.container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 25px 16px;
+}
+
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+button {
+  background: var(--red);
+  color: white;
+  border: 0;
+  padding: 12px 17px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+button:hover { opacity: .88; }
+
+.secondary {
+  background: #e9dfd0;
+  color: #29241f;
+}
+
+.danger { background: #a52d2d; }
+
+.menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background: var(--white);
+  border-radius: 15px;
+  overflow: hidden;
+  border: 1px solid #e7dccb;
+  box-shadow: 0 5px 15px #00000008;
+}
+
+.food-image {
+  height: 200px;
+  background: #e9dfce;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #786c5c;
+}
+
+.food-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.details { padding: 16px; }
+
+.details h3 {
+  margin: 0 0 10px;
+  font-size: 21px;
+}
+
+.details p {
+  color: #776e63;
+  line-height: 1.7;
+  min-height: 40px;
+}
+
+.price {
+  font-size: 21px;
+  font-weight: bold;
+  color: var(--red);
+}
+
+#adminPanel {
+  display: none;
+  background: var(--white);
+  padding: 18px;
+  border-radius: 14px;
+  margin-bottom: 22px;
+  border: 1px solid #e7dccb;
+}
+
+.admin-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee3d3;
+}
+
+.actions {
+  display: flex;
+  gap: 7px;
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #0009;
+  z-index: 10;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+}
+
+.modal.show { display: flex; }
+
+.dialog {
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+  padding: 23px;
+  border-radius: 15px;
+}
+
+.field { margin: 14px 0; }
+
+.field label {
+  display: block;
+  margin-bottom: 7px;
+  font-weight: bold;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d9cdbb;
+  border-radius: 8px;
+  font: inherit;
+}
+
+textarea {
+  min-height: 75px;
+  resize: vertical;
+}
+
+.message {
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.error { color: #b3261e; }
+.success { color: #26733b; }
+
+footer {
+  text-align: center;
+  color: #776e63;
+  padding: 20px;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <h1>كبسة بر</h1>
+  <p>نكهة البر الأصيل... على سفرتكم</p>
+</header>
+
+<main class="container">
+
+  <div class="top">
+    <div>
+      <h2>قائمة الطعام</h2>
+      <p>اكتشف أصنافنا وأسعارنا</p>
+    </div>
+    <button onclick="openLogin()">دخول الإدارة</button>
+  </div>
+
+  <section id="adminPanel">
+    <h2>لوحة إدارة المطعم</h2>
+
+    <button onclick="openForm()">+ إضافة صنف جديد</button>
+    <button class="secondary" onclick="exportMenu()">
+      تصدير نسخة احتياطية
+    </button>
+    <button class="secondary" onclick="logout()">تسجيل الخروج</button>
+
+    <p>يمكنك إضافة الوجبات وتعديل الأسعار والصور أو حذف الأصناف.</p>
+
+    <div id="adminList"></div>
+  </section>
+
+  <section id="menu" class="menu"></section>
+
+</main>
+
+<footer>مطعم كبسة بر - حياكم الله</footer>
+
+<!-- نافذة تسجيل الدخول -->
+<div class="modal" id="loginModal">
+  <div class="dialog">
+    <h2>تسجيل دخول الإدارة</h2>
+
+    <div class="field">
+      <label for="username">اسم المستخدم</label>
+      <input id="username" placeholder="أصيل الجبرتي">
+    </div>
+
+    <div class="field">
+      <label for="password">كلمة المرور</label>
+      <input id="password" type="password">
+    </div>
+
+    <p id="loginMessage" class="message error"></p>
+
+    <button onclick="login()">دخول</button>
+    <button class="secondary" onclick="closeModals()">إلغاء</button>
+  </div>
+</div>
+
+<!-- نافذة إضافة وتعديل الأصناف -->
+<div class="modal" id="itemModal">
+  <div class="dialog">
+    <h2 id="formTitle">إضافة صنف جديد</h2>
+
+    <form id="itemForm">
+      <input type="hidden" id="itemId">
+
+      <div class="field">
+        <label for="itemName">اسم الصنف *</label>
+        <input id="itemName" required maxlength="100"
+               placeholder="مثال: كبسة دجاج">
+      </div>
+
+      <div class="field">
+        <label for="itemPrice">السعر بالريال *</label>
+        <input id="itemPrice" type="number" min="0"
+               step="0.5" required placeholder="25">
+      </div>
+
+      <div class="field">
+        <label for="itemDescription">وصف الوجبة</label>
+        <textarea id="itemDescription"
+                  placeholder="اكتب وصف الوجبة"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="itemPhoto">صورة الوجبة</label>
+        <input id="itemPhoto" type="file" accept="image/*">
+        <small>اختيار الصورة اختياري. يفضّل أن تكون صغيرة الحجم.</small>
+      </div>
+
+      <p id="formMessage" class="message"></p>
+
+      <button id="saveButton" type="submit">حفظ الصنف</button>
+      <button type="button" class="secondary"
+              onclick="closeModals()">إلغاء</button>
+    </form>
+  </div>
+</div>
+
+<script>
+/*
+  بيانات دخول تجريبية فقط.
+  لا تستخدم هذه الطريقة للحماية في موقع منشور للعامة.
+*/
+const ADMIN_USERNAME = "أصيل الجبرتي";
+const ADMIN_PASSWORD = "Kabsa2026!";
+
+const STORAGE_KEY = "kabsa_bir_menu_v4";
+
+const defaultMenu = [
+  {
+    id: "1",
+    name: "كبسة دجاج",
+    price: 25,
+    description: "أرز متبّل بنكهة عربية أصيلة مع دجاج شهي.",
+    image: ""
+  },
+  {
+    id: "2",
+    name: "كبسة لحم",
+    price: 38,
+    description: "أرز غني بالتوابل مع لحم طري ولذيذ.",
+    image: ""
+  },
+  {
+    id: "3",
+    name: "نصف دجاج على الفحم",
+    price: 22,
+    description: "دجاج مشوي على الفحم بطعم مميز.",
+    image: ""
+  }
+];
+
+let dishes = [];
+let loggedIn = false;
+
+const $ = id => document.getElementById(id);
+
+function loadMenu() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    dishes = saved ? JSON.parse(saved) : defaultMenu;
+    if (!Array.isArray(dishes)) throw new Error();
+  } catch (error) {
+    dishes = defaultMenu.map(item => ({ ...item }));
+  }
+}
+
+function saveMenu() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dishes));
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function safe(value) {
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[char]);
+}
+
+function renderMenu() {
+  const menu = $("menu");
+
+  if (!dishes.length) {
+    menu.innerHTML = "<p>لا توجد أصناف حاليًا.</p>";
+  } else {
+    menu.innerHTML = dishes.map(item => `
+      <article class="card">
+        <div class="food-image">
+          ${item.image
+            ? `<img src="${item.image}" alt="${safe(item.name)}">`
+            : "صورة الوجبة"}
+        </div>
+        <div class="details">
+          <h3>${safe(item.name)}</h3>
+          <p>${safe(item.description)}</p>
+          <div class="price">
+            ${Number(item.price).toLocaleString("ar-SA")} ريال
+          </div>
+        </div>
+      </article>
+    `).join("");
+  }
+
+  renderAdmin();
+}
+
+function renderAdmin() {
+  $("adminList").innerHTML = dishes.map(item => `
+    <div class="admin-row">
+      <div>
+        <strong>${safe(item.name)}</strong>
+        <div>${Number(item.price).toLocaleString("ar-SA")} ريال</div>
+      </div>
+      <div class="actions">
+        <button class="secondary"
+          onclick="editItem('${safe(item.id)}')">تعديل</button>
+        <button class="danger"
+          onclick="deleteItem('${safe(item.id)}')">حذف</button>
+      </div>
+    </div>
+  `).join("") || "<p>لم تضف أصنافًا بعد.</p>";
+}
+
+function openLogin() {
+  if (loggedIn) {
+    $("adminPanel").style.display =
+      $("adminPanel").style.display === "block" ? "none" : "block";
+    return;
+  }
+
+  $("loginMessage").textContent = "";
+  $("loginModal").classList.add("show");
+}
+
+function login() {
+  if (
+    $("username").value.trim() === ADMIN_USERNAME &&
+    $("password").value === ADMIN_PASSWORD
+  ) {
+    loggedIn = true;
+    $("adminPanel").style.display = "block";
+    closeModals();
+    renderAdmin();
+  } else {
+    $("loginMessage").textContent =
+      "اسم المستخدم أو كلمة المرور غير صحيحة.";
+  }
+}
+
+function logout() {
+  loggedIn = false;
+  $("adminPanel").style.display = "none";
+}
+
+function closeModals() {
+  document.querySelectorAll(".modal").forEach(modal => {
+    modal.classList.remove("show");
+  });
+}
+
+function openForm(item = null) {
+  if (!loggedIn) return;
+
+  $("itemForm").reset();
+  $("formMessage").textContent = "";
+  $("itemId").value = item ? item.id : "";
+  $("itemName").value = item ? item.name : "";
+  $("itemPrice").value = item ? item.price : "";
+  $("itemDescription").value = item ? item.description : "";
+  $("itemForm").dataset.oldImage = item ? item.image : "";
+
+  $("formTitle").textContent =
+    item ? "تعديل الصنف" : "إضافة صنف جديد";
+
+  $("itemModal").classList.add("show");
+}
+
+function editItem(id) {
+  const item = dishes.find(d => d.id === id);
+  if (item) openForm(item);
+}
+
+function deleteItem(id) {
+  if (!loggedIn) return;
+
+  const item = dishes.find(d => d.id === id);
+  if (!item || !confirm("هل تريد حذف " + item.name + "؟")) return;
+
+  const previous = dishes;
+  dishes = dishes.filter(d => d.id !== id);
+
+  if (saveMenu()) {
+    renderMenu();
+  } else {
+    dishes = previous;
+    alert("تعذّر الحذف بسبب مساحة التخزين.");
+  }
+}
+
+/* تصغير الصورة قبل حفظها */
+function compressImage(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onerror = () => reject(new Error("تعذرت قراءة الصورة"));
+
+    reader.onload = () => {
+      const img = new Image();
+
+      img.onerror = () => reject(new Error("الصورة غير صالحة"));
+
+      img.onload = () => {
+        const max = 800;
+        const scale = Math.min(
+          1,
+          max / Math.max(img.width, img.height)
+        );
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+
+        canvas.getContext("2d").drawImage(
+          img, 0, 0, canvas.width, canvas.height
+        );
+
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+
+      img.src = reader.result;
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+$("itemForm").addEventListener("submit", async event => {
+  event.preventDefault();
+
+  if (!loggedIn) return;
+
+  const name = $("itemName").value.trim();
+  const priceText = $("itemPrice").value;
+  const price = Number(priceText);
+
+  if (!name || priceText === "" || !Number.isFinite(price) || price < 0) {
+    $("formMessage").className = "message error";
+    $("formMessage").textContent = "أدخل اسمًا وسعرًا صحيحين.";
+    return;
+  }
+
+  const button = $("saveButton");
+  button.disabled = true;
+  button.textContent = "جارٍ الحفظ...";
+
+  try {
+    const file = $("itemPhoto").files[0];
+    let image = $("itemForm").dataset.oldImage || "";
+
+    if (file) {
+      if (!file.type.startsWith("image/")) {
+        throw new Error("الملف المحدد ليس صورة.");
+      }
+      image = await compressImage(file);
+    }
+
+    const id = $("itemId").value || String(Date.now());
+
+    const newItem = {
+      id,
+      name,
+      price,
+      description: $("itemDescription").value.trim(),
+      image
+    };
+
+    const previous = dishes.map(d => ({ ...d }));
+    const index = dishes.findIndex(d => d.id === id);
+
+    if (index >= 0) {
+      dishes[index] = newItem;
+    } else {
+      dishes.push(newItem);
+    }
+
+    if (!saveMenu()) {
+      dishes = previous;
+      throw new Error(
+        "تعذر الحفظ. جرّب صورة أصغر أو افتح الموقع في متصفح آخر."
+      );
+    }
+
+    renderMenu();
+
+    $("formMessage").className = "message success";
+    $("formMessage").textContent = "تم حفظ الصنف بنجاح.";
+
+    setTimeout(closeModals, 500);
+
+  } catch (error) {
+    $("formMessage").className = "message error";
+    $("formMessage").textContent = error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = "حفظ الصنف";
+  }
+});
+
+function exportMenu() {
+  if (!loggedIn) return;
+
+  const blob = new Blob(
+    [JSON.stringify(dishes, null, 2)],
+    { type: "application/json" }
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = "kabsa-bir-menu.json";
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
+loadMenu();
+renderMenu();
+</script>
+
+</body>
+</html>
